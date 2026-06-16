@@ -1,0 +1,128 @@
+@startuml 06_deployment_and_crosscut
+title Production Deployment (scaling path) + Co-Pilot vs. Hot Path
+
+' =================================================================================
+' This file implements both "Scaling Strategy" diagrams provided by the user:
+' 1. The infrastructure deployment topology.
+' 2. The hot path (deterministic, L4 tools) vs. the co-pilot path (async, agent synthesis).
+' =================================================================================
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam roundCorner 8
+
+skinparam component {
+    BackgroundColor #F2F6FB
+    BorderColor #4A6FA5
+}
+skinparam database {
+    BackgroundColor #F4ECFB
+    BorderColor #967ADC
+}
+skinparam cloud {
+    BackgroundColor #E8F0FE
+    BorderColor #4285F4
+}
+skinparam package {
+    BackgroundColor #FFFFFF
+    BorderColor #555555
+}
+skinparam node {
+    BackgroundColor #FFFFFF
+    BorderColor #555555
+}
+
+' ---------------------------------------------------------------------------------
+' Right-Side Box: Co-Pilot vs. Hot Path Functional Flow
+' ---------------------------------------------------------------------------------
+package "Hot Path (L4 Tools) vs. Co-Pilot Path (L5 Agents)" as Flow #FFF8E1 {
+    rectangle "Txn Payload/\nNLQ" as FLOW_IN #FFFFFF
+
+    ' ---- Deterministic Hot Path ----
+    rectangle "Layer 4 Deterministic Tools\n(jurisdiction_resolve, classify_transaction,\ncheck_threshold)" as FLOW_HOT #EAF6EA
+    database "Layer 3 Knowledge\nStorage" as FLOW_L3
+
+    FLOW_HOT -right-> FLOW_L3 : "determines filter"
+    FLOW_L3 -left-> FLOW_HOT : "returns factual results"
+
+    FLOW_IN -down-> FLOW_HOT : "Hot Path (Sync,\nLow Latency)"
+
+    ' ---- Deterministic Gating Gate ----
+    diamond "Deterministic\nGating decision\nmade here?" as GATE #FFFDE7
+
+    FLOW_HOT -down-> GATE : "gating choice\n(approved/hold)"
+
+    ' ---- Append to append-only Decision Ledger ----
+    database "Layer 3 Decision Ledger\n(append-only)" as FLOW_L3_LED
+
+    GATE -right-> FLOW_L3_LED : "append gating choice\n(audit trail locked)"
+
+    ' ---- Async Agent Co-pilot Path ----
+    rectangle "Layer 5 Agents\n(Screening Specialist,\nSupervisor)\n(Reasoning, routing,\nPII redaction tier)" as FLOW_AGENT #FFF4E6
+
+    GATE -down-> FLOW_AGENT : "Co-Pilot Path\n(Async, explanation)"
+    FLOW_AGENT -left-> FLOW_AGENT : "Synthesis &\nCitation check"
+
+    FLOW_AGENT -right-> FLOW_L3_LED : "update with explanation"
+
+    FLOW_L3_LED -down-> [Interface Output]
+}
+
+' ---------------------------------------------------------------------------------
+' Left-Side Box: Production Deployment Topology (AWS)
+' ---------------------------------------------------------------------------------
+package "AWS Region: India (Mumbai)" as REGION #E8F8F5 {
+    node "EKS Cluster (Kubernetes)" as EKS {
+        package "Interface Pods" as EKS_L6 {
+            component "Txn-Screening API"
+            component "Chat UI"
+        }
+        package "Agent Orchestrator Pods" as EKS_L5 {
+            component "L5 Supervisor"
+            component "L5 specialists"
+            component "Evaluation Worker"
+        }
+        package "Reasoning/Redaction Pods" as EKS_OLLAMA {
+            component "Local Ollama Worker\n(Llama 3.2 1B-3B / Phi-3)"
+            note right: PII Redactor / Classification tier
+        }
+        package "RAG Ingestion Workers" as EKS_INGEST {
+            component "Parser Family B (Clean-PDF)"
+            component "Reference Resolver"
+        }
+    }
+
+    node "Managed DB Services" as DB {
+        database "Amazon RDS for PostgreSQL\n+ pgvector\n+ btree_gist" as RDS_PG
+        note bottom: Bi-temporal Vector DB\n+ Decision Ledger
+    }
+
+    ' Deployment data sovereignty notes
+    note bottom of REGION
+      **Data Residency Contract:**
+      1. RBI circulars and user PII never leave the Indian VPC VPC.
+      2. PII Redaction Tier routes to Local Ollama worker before synthesis.
+      3. Synthsizer can configurable route to local worker OR cloud API.
+    end note
+}
+
+' ---------------------------------------------------------------------------------
+' External Cloud API Synthesis Path (optional reasoning tier)
+' ---------------------------------------------------------------------------------
+cloud "External LLM Synthesis API\n(Anonymized Payloads Only)" as CLOUD #FAFAFA {
+    component "Cloud Reasoner\n(Gemini Flash / OpenAI-gpt4o-mini)"
+    note bottom: Cost control tier (cheaper than self-hosting a large model)
+}
+
+' ---------------------------------------------------------------------------------
+' Deployment Connections
+' ---------------------------------------------------------------------------------
+EKS_L6 --> RDS_PG : "Hot path data lookup"
+EKS_L5 -right-> EKS_OLLAMA : "Redaction/Classification"
+EKS_L5 -left-> CLOUD : "Synthesis (Anonymized)"
+EKS_L5 -down-> RDS_PG : "Vector query/\nDecision append"
+EKS_INGEST -down-> RDS_PG : "Ingestion Populates"
+EKS_OLLAMA --> [Shared GPU Nodes]
+
+@enduml

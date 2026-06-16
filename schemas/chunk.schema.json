@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DatabaseChunkPayload",
+  "type": "object",
+  "properties": {
+    "jurisdiction": { "type": "string", "maxLength": 4 },
+    "doc_id": { "type": "string" },
+    "citation": { "type": "string" },
+    "raw_text": { "type": "string" },
+    "category": { "type": "string" },
+    "payment_rails": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["jurisdiction", "doc_id", "citation", "raw_text", "payment_rails"]
+}

@@ -1,0 +1,15 @@
+{
+  "pack_id": "pack-in-rbi-v1",
+  "jurisdiction": "IN",
+  "version": "1.0.0",
+  "last_updated": "2026-06-15",
+  "documents": [
+    {
+      "doc_id": "doc-rbi-kyc-2016",
+      "title": "Master Direction - Know Your Customer (KYC) Direction, 2016",
+      "type": "Master Direction",
+      "payment_rails_affected": ["Universal"],
+      "initial_effective_date": "2016-02-25"
+    }
+  ]
+}

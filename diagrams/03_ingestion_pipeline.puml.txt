@@ -1,0 +1,138 @@
+@startuml 03_ingestion_pipeline
+title Layer 2 - Ingestion Pipeline (raw doc -> queryable knowledge)
+
+' =================================================================================
+' Per-pack pipeline. Pack manifest decides parser family. Output goes into
+' Layer-3 storage (vector index, KG, obligation library, doc store).
+' Same pipeline runs for IN, EU, US - only the parser config differs.
+' =================================================================================
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam ActivityBorderColor #4A6FA5
+skinparam ActivityBackgroundColor #F2F6FB
+skinparam ActivityDiamondBorderColor #4A6FA5
+skinparam ActivityDiamondBackgroundColor #FFF8E1
+skinparam NoteBackgroundColor #FFFDE7
+skinparam NoteBorderColor #B58B00
+
+|#E8F8F5|Pack Input|
+start
+:Source document arrives
+(structured input - no crawling);
+note right
+  R&D scope: structured input
+  is provided. Production may
+  add a crawling layer later.
+end note
+
+:Read pack manifest
+(manifest.yaml);
+
+if (parser family?) then (XML)
+  |#E8F0FE|Family A: Structured-XML|
+  :Parse Akoma Ntoso / ELI;
+  :Native hierarchy already there
+  (Article -> Para -> sub);
+elseif (Clean-PDF) then (PDF)
+  |#FFF8E1|Family B: Clean-PDF|
+  :PyMuPDF / pdfplumber extract;
+  :Detect headings via regex
+  (Chapter \d+, Para \d+\.\d+);
+  :Camelot for tables;
+  if (OCR needed?) then (yes)
+    :Tesseract OCR pass;
+  else (no)
+  endif
+else (HTML)
+  |#FFEDED|Family C: HTML-scraped|
+  :BeautifulSoup parse;
+  :Detect hierarchy via div/h tags
+  + per-site config selectors;
+endif
+
+|#F4ECFB|Common Pipeline|
+:Build clause tree
+(Document -> Chapter -> Para -> sub);
+note right
+  Output of all 3 parser families
+  converges to the same Clause tree.
+  Rest of pipeline is parser-agnostic.
+end note
+
+:Chunker
+- one chunk per clause
+- + parent-context window
+- + obligation-as-chunk;
+
+:Reference Resolver
+- intra-doc refs ("para 2.1")
+- inter-doc refs (regex + ML)
+- cross-pack refs (manifest links)
+- emit CrossLink edges;
+
+:Metadata Tagger
+- assign TaxonomyTag
+  (vertical, cross-layer, jurisdiction, framework)
+- pull from manifest + per-doc config;
+
+:Obligation Extractor
+- LLM-based ("shall/must/may not" patterns)
+- map to (who, what, when, conditions, exceptions)
+- emit Obligation records
+- link to source Clause;
+
+:Date Parser
+- extract issued / gazette / effective /
+  transition / sunset dates
+- compute valid_from / valid_to;
+
+:Embedder
+- text-embedding-3-large for chunks
+- pgvector storage;
+
+|#FFEDED|Storage Write (Layer 3)|
+fork
+  :INSERT Document, Clause records
+  with VersionedRecord fields;
+fork again
+  :INSERT Chunk records
+  + vector embeddings;
+fork again
+  :INSERT Obligation records
+  with valid_from/knowledge_from = now();
+fork again
+  :INSERT CrossLink edges
+  (KG population);
+end fork
+
+:Update knowledge_to on superseded records
+(close out previous version);
+
+:Trigger Impact-Analysis run
+(Layer-5 Impact Specialist agent)
+- which existing obligations
+  were touched?
+- which internal policies are
+  likely affected?
+- emit alerts for compliance head;
+
+:Emit ingestion-event to ledger
+(audit trail of WHAT was ingested,
+by WHOM, with WHICH pipeline version);
+
+stop
+
+note right
+  **Versioning of the pipeline itself**
+  Every ingestion run records:
+  - pipeline_version
+  - parser_config_version
+  - prompt_version (for obligation extractor)
+  - model_version (for embedder + LLM)
+  This is part of MRM/governance -
+  audit can replay an ingestion deterministically.
+end note
+
+@enduml

@@ -1,0 +1,26 @@
+version: "1.0"
+phase: "mvp"
+
+tools:
+  - id: T02
+    name: search_regulation
+    type: vector_db
+  - id: T08
+    name: get_customer_profile
+    type: relational_db
+
+agents:
+  - id: A1
+    name: supervisor
+    tools: []
+    prompt_file: "prompts/supervisor_v1.yaml"
+    
+  - id: A3
+    name: screening_specialist
+    tools: ["T02", "T08"]
+    prompt_file: "prompts/screening_v1.yaml"
+    
+  - id: A5
+    name: report_specialist
+    tools: []
+    prompt_file: "prompts/reporter_v1.yaml"

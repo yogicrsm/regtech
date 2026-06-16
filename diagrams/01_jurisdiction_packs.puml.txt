@@ -1,0 +1,130 @@
+@startuml 01_jurisdiction_packs
+title Layer 0 - Jurisdiction & Standards Plane (the horizontal-extension primitive)
+
+' =================================================================================
+' International standards sit ABOVE all jurisdictional packs and "project
+' down" via implements_standard edges. Each pack is a self-contained,
+' pluggable manifest + content. Adding a new country = adding a new pack;
+' no change in Layers 1-5.
+' =================================================================================
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam roundCorner 8
+
+skinparam package {
+    BackgroundColor #FFFFFF
+    BorderColor #4A6FA5
+    FontColor #222222
+}
+
+skinparam component {
+    BackgroundColor #F2F6FB
+    BorderColor #4A6FA5
+}
+
+' ---------------------------------------------------------------------------------
+' International Standards Tier
+' ---------------------------------------------------------------------------------
+
+package "International Standards Registry" as INTL #E8F8F5 {
+    component "Basel III\n(BCBS)" as STD_BASEL
+    component "FATF\nRecommendations" as STD_FATF
+    component "IOSCO\nPrinciples" as STD_IOSCO
+    component "ISDA\nstandards" as STD_ISDA
+    component "IFRS" as STD_IFRS
+    note right
+      These are *non-binding by themselves*.
+      Each country transposes them into
+      binding local regulation. We track
+      the standard once, and link from
+      every pack via implements_standard.
+    end note
+}
+
+' ---------------------------------------------------------------------------------
+' IN Pack (MVP - built first end-to-end)
+' ---------------------------------------------------------------------------------
+package "Pack: IN  (India - MVP)" as PACK_IN #FFF8E1 {
+    component "manifest.yaml\n- name, currency, regulators\n- timezone, fiscal_year\n- languages" as IN_manifest
+    component "taxonomy_overrides.yaml\n(populates the 8x7 matrix\nfor IN regulators only)" as IN_tax
+    component "parser_config.yaml\n- family: clean_pdf\n- ocr: yes\n- citation regex" as IN_parser
+    component "documents/\nRBI MD KYC,\nBasel III in MD,\nFEMA Regs ..." as IN_docs
+    component "obligations/\n(extracted, versioned)" as IN_obl
+    component "cross_links.yaml\n- standards implemented\n- adjacent IN regs" as IN_links
+}
+
+' ---------------------------------------------------------------------------------
+' EU Pack (acceptance test for horizontal extension)
+' ---------------------------------------------------------------------------------
+package "Pack: EU  (acceptance test)" as PACK_EU #FFEDED {
+    component "manifest.yaml" as EU_manifest
+    component "taxonomy_overrides.yaml" as EU_tax
+    component "parser_config.yaml\n- family: structured_xml\n- format: Akoma Ntoso/ELI" as EU_parser
+    component "documents/\nMiFID II Dir 2014/65,\nDel Reg 2017/565,\nESMA Q&As ..." as EU_docs
+    component "obligations/" as EU_obl
+    component "cross_links.yaml" as EU_links
+}
+
+' ---------------------------------------------------------------------------------
+' US Pack (later)
+' ---------------------------------------------------------------------------------
+package "Pack: US  (phase 2)" as PACK_US #F4ECFB {
+    component "manifest.yaml" as US_manifest
+    component "parser_config.yaml\n- family: html_scraped\n- format: CFR/HTML" as US_parser
+    component "documents/\nDodd-Frank,\nReg Q, BSA ..." as US_docs
+    component "obligations/" as US_obl
+}
+
+' ---------------------------------------------------------------------------------
+' Future Pack (proof of plug-in extensibility)
+' ---------------------------------------------------------------------------------
+package "Pack: <future>  (plug-in)" as PACK_X #F5F5F5 {
+    component "manifest.yaml\n+ pick parser family\n+ tag docs to 8x7\n+ map to standards\n= done" as X_all
+}
+
+' ---------------------------------------------------------------------------------
+' implements_standard edges (cross-tier)
+' ---------------------------------------------------------------------------------
+IN_links ..> STD_BASEL : implements\n(via RBI MD on Basel III Capital)
+IN_links ..> STD_FATF : implements\n(via RBI MD KYC para 8)
+EU_links ..> STD_BASEL : implements\n(via CRR Articles 25-88)
+EU_links ..> STD_FATF : implements\n(via AMLD5/6)
+EU_links ..> STD_IOSCO : implements\n(via MiFID II)
+PACK_US ..> STD_BASEL : implements\n(via Reg Q)
+PACK_US ..> STD_FATF : implements\n(via BSA / PATRIOT Act)
+
+' ---------------------------------------------------------------------------------
+' Pack manifest contract (the plug-in interface)
+' ---------------------------------------------------------------------------------
+note bottom of PACK_X
+  **Adding a new country (pluggable):**
+  1. Drop in manifest.yaml (regulators, currency, ...)
+  2. Pick a parser family (XML / Clean-PDF / HTML)
+  3. Add parser_config.yaml (per-country tweaks)
+  4. Tag docs against the shared 8x7 taxonomy
+  5. Map local docs to international standards
+  6. Plug in. Layers 1-5 unchanged.
+
+  **Acceptance test:** EU pack must be added
+  without changing any code in Layers 1-5.
+  If it requires changes, the architecture failed.
+end note
+
+' ---------------------------------------------------------------------------------
+' How txns/queries resolve to packs
+' ---------------------------------------------------------------------------------
+package "Runtime: pack resolution" as RT #FFF4E6 {
+    component "Txn payload\nor NLQ" as RT_in
+    component "jurisdiction_resolve()\n(Layer-4 tool)" as RT_resolve
+    component "Active pack set\n{IN, EU, INTL: Basel III}" as RT_set
+}
+
+RT_in -right-> RT_resolve
+RT_resolve -right-> RT_set
+RT_set ..> PACK_IN
+RT_set ..> PACK_EU
+RT_set ..> INTL
+
+@enduml

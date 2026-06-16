@@ -1,0 +1,135 @@
+@startuml 00_system_layers
+title Reg-Assistant - 7-Layer System Architecture (Macro View)
+
+' =================================================================================
+' Top-down stack. Layer 0 is the architectural primitive that allows
+' horizontal expansion (new country = new pack, no schema change).
+' Each layer below has a single contract upward.
+' =================================================================================
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam roundCorner 8
+
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #555555
+    FontColor #222222
+}
+
+skinparam component {
+    BackgroundColor #F2F6FB
+    BorderColor #4A6FA5
+}
+
+' -------- Layer 6 - Interface ------------
+rectangle "**Layer 6 - Interface**\nWho talks to the system, how" as L6 #E8F0FE {
+    component "Officer Chat UI" as L6_chat
+    component "Txn-Screening API\n(sync, <500ms)" as L6_screen
+    component "Report Endpoints\n(async, batch)" as L6_report
+    component "Audit-Replay UI\n(point-in-time)" as L6_audit
+    component "Pack-Admin UI\n(manage countries)" as L6_admin
+}
+
+' -------- Layer 5 - Agentic Orchestration ------------
+rectangle "**Layer 5 - Agentic Orchestration**\nReasoning, routing, multi-hop" as L5 #FFF4E6 {
+    component "Supervisor Agent\n(intent + jurisdiction-resolve)" as L5_sup
+    component "QA Specialist" as L5_qa
+    component "Screening Specialist" as L5_screen
+    component "Impact Specialist\n(reg-change)" as L5_impact
+    component "Report Specialist" as L5_report
+    component "Citation-Faithfulness\nVerifier" as L5_verify
+}
+
+' -------- Layer 4 - Retrieval & Reasoning Tools ------------
+rectangle "**Layer 4 - Retrieval & Reasoning Tools (MCP-style)**" as L4 #EAF6EA {
+    component "jurisdiction_resolve" as L4_jr
+    component "search_regulation\n(hybrid, time-aware)" as L4_search
+    component "kg_traverse\n(multi-hop)" as L4_kg
+    component "resolve_citation" as L4_cite
+    component "lookup_obligation" as L4_obl
+    component "classify_transaction" as L4_clx
+    component "check_threshold" as L4_thresh
+    component "log_decision" as L4_log
+}
+
+' -------- Layer 3 - Knowledge Storage ------------
+rectangle "**Layer 3 - Knowledge Storage** (Postgres-first; per-pack namespaces; bi-temporal)" as L3 #F4ECFB {
+    component "Vector Index\n(pgvector)" as L3_vec
+    component "Knowledge Graph\n(intra-doc + inter-doc edges)" as L3_kg
+    component "Obligation Library\n(JSONB, queryable)" as L3_obl
+    component "Versioned Doc Store\n(tstzrange - bi-temporal)" as L3_doc
+    component "Decision Ledger\n(append-only)" as L3_led
+}
+
+' -------- Layer 2 - Ingestion ------------
+rectangle "**Layer 2 - Ingestion (Parser Families)**" as L2 #FFEDED {
+    component "Family A:\nStructured-XML\n(EU / Akoma Ntoso)" as L2_xml
+    component "Family B:\nClean-PDF\n(RBI / CFR)" as L2_pdf
+    component "Family C:\nHTML-scraped\n(regulator websites)" as L2_html
+    component "Chunker\n(clause + parent + obligation)" as L2_chunk
+    component "Reference Resolver" as L2_ref
+    component "Obligation Extractor" as L2_oext
+    component "Metadata Tagger\n(8x7 taxonomy)" as L2_tag
+}
+
+' -------- Layer 1 - Data Schema ------------
+rectangle "**Layer 1 - Data Schema (the contract)**" as L1 #FFF8E1 {
+    component "Taxonomy Schema\n(8 verticals x 7 layers)" as L1_tax
+    component "Obligation Atom\n(who/what/when/conds/excs/source)" as L1_obl
+    component "Bi-Temporal Model\n(valid_time x knowledge_time)" as L1_time
+    component "Citation Model\n(versioned clause IDs)" as L1_cite
+}
+
+' -------- Layer 0 - Jurisdiction & Standards Plane ------------
+rectangle "**Layer 0 - Jurisdiction & Standards Plane** (the horizontal-extension primitive)" as L0 #E8F8F5 {
+    component "International\nStandards Registry\n(Basel III, FATF,\nIOSCO, ISDA, IFRS)" as L0_intl
+    component "Pack: IN\n(MVP - built first)" as L0_in
+    component "Pack: EU\n(acceptance test)" as L0_eu
+    component "Pack: US\n(later)" as L0_us
+    component "Pack: <future>\n(plug-in)" as L0_future
+}
+
+' -------- Cross-cutting ------------
+rectangle "**Cross-cutting**" as XC #F5F5F5 {
+    component "Eval Framework\n(golden set, judge,\ncitation faithfulness,\nabstention)" as XC_eval
+    component "Governance / MRM\n(prompt+model+pack\nversioning, EU AI Act)" as XC_gov
+    component "Security &\nData Residency" as XC_sec
+    component "Observability\n(traces, metrics, logs)" as XC_obs
+}
+
+' =================================================================================
+' Layer-to-layer contracts (downward dependency = upward query)
+' =================================================================================
+L6 -down-> L5 : "user request /\ntxn payload"
+L5 -down-> L4 : "tool calls\n(structured)"
+L4 -down-> L3 : "queries\n(filtered by pack & time)"
+L3 .up.> L2 : "populated by"
+L2 -up-> L1 : "conforms to"
+L1 -up-> L0 : "instantiated per pack"
+L0 -[hidden]-> L1
+XC .up.> L6 : "wraps every layer"
+XC .up.> L5
+XC .up.> L4
+
+note right of L0
+  **Why Layer 0 exists:**
+  Adding a new country must NOT
+  require schema or code changes
+  in Layers 1-5. Only a new
+  Pack manifest + parser config
+  is added. EU pack is the
+  acceptance test for this.
+end note
+
+note right of L1
+  **The contract:**
+  Every chunk, obligation, and
+  citation in Layers 2-5 conforms
+  to these schemas. 60-80% match
+  to real-world taxonomy is fine
+  - schema can absorb relabelling.
+end note
+
+@enduml

@@ -1,0 +1,99 @@
+@startuml 05_screening_sequence
+title Scenario 2A: Txn-Screening API Sequence (hot path + co-pilot async)
+
+' =================================================================================
+' Focus on deterministic gating + bi-temporal lookup. The LLM co-pilot
+' is only used to explain the *already-deterministically-made* decision
+' and generate citations, ensuring co-pilot isn't controller.
+' =================================================================================
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam participantBackgroundColor #FFFFFF
+skinparam participantBorderColor #4A6FA5
+skinparam participantHeaderBackgroundColor #E8F0FE
+skinparam arrowColor #4A6FA5
+skinparam boxBackgroundColor #F2F6FB
+
+actor "Officer / Gateway" as ACTOR
+box "Layer 6 - Interface"
+  participant "Txn-Screening API" as L6
+end box
+box "Layer 4 & 5 - Agentic/Tools"
+  participant "Supervisor Agent\n(T1 classification)" as L5_sup
+  participant "jurisdiction_resolve()\n(Layer 4 tool)" as L4_jr
+  participant "screen_transaction\n(Layer 5 specialist)" as L5_screen
+  participant "classify_transaction()\n(intent clx + high-risk flag)" as L4_clx
+  participant "search_regulations()\n(hybrid search)" as L4_search
+  participant "check_threshold()\n(amount vs. rule)" as L4_thresh
+end box
+box "Layer 3 - Storage"
+  database "Decision Ledger\n(Hot Path - append-only)" as L3_led
+  database "Bitemporal Vector DB\n(filtered by pack & time)" as L3_vec
+end box
+
+' =================================================================================
+' Step 1: Hot Path - Deterministic Gating (sync, <500ms)
+' =================================================================================
+group #FFF4E6 "Step 1: Hot Path - Deterministic Gating (sync, <500ms)"
+  ACTOR -> L6 : screen_transaction()\n{amount: $2M, jur: High-Risk}
+
+  activate L6
+    L6 -> L4_jr : jurisdiction_resolve()\n{recipient_jurisdiction}
+    return active_pack_set: {INTL: Basel III, IN, High-Risk}
+
+    L6 -> L4_clx : classify_transaction()\n{txn_payload}
+    return high_risk_flag: yes, txn_intent: cross_border
+
+    ' -----------------------------------------------------------------------------
+    ' Key query: find rules active AT transaction date (valid_time filter)
+    ' -----------------------------------------------------------------------------
+    L6 -> L4_search : search_regulations()\n{txn_intent: cross_border, active_packs}\nFilter: valid_time @> txn_date
+    activate L4_search
+      L4_search -> L3_vec : hybrid search SQL\nFilter valid_time && knowledge_time
+      return relevant obligations: [Obligation: RBI-KYC-HighRisk]
+    return relevant rules
+
+    L6 -> L4_thresh : check_threshold()\n{txn_amount, obligation_trigger}
+    return threshold_exceeded: yes
+
+    ' -----------------------------------------------------------------------------
+    ' Hot path decision is MADE deterministically here
+    ' -----------------------------------------------------------------------------
+    L6 -> L3_led : log_decision()\n{decision: HOLD/AUDIT,\nreason: KYC threshold exceeded}
+    return decision_id
+
+    L6 --> ACTOR : Return simple Sync response\n{status: HOLD, decision_id: 123}\n(ensures low latency response)
+  deactivate L6
+end group
+
+' =================================================================================
+' Step 2: Co-Pilot Path - Agent Synthesis & Explanation (async)
+' =================================================================================
+group #FFFDE7 "Step 2: Co-Pilot Path - Agent Synthesis & Citation (async)"
+  L6 -> L5_screen : screen_transaction()\n(async trigger with decision_id)
+  activate L5_screen
+    L5_screen -> L3_led : lookup_decision()\n{decision_id}
+    return deterministic_decision
+
+    L5_screen -> L3_vec : lookup_obligation()\n{obligation_id from hot path}
+    return full obligation text + source clause text
+
+    ' -----------------------------------------------------------------------------
+    ' LLM creates the explanation from deterministic facts
+    ' -----------------------------------------------------------------------------
+    L5_screen -> L5_screen : Synthesize explanation\n+ Citation-faithfulness check
+    L5_screen -> L3_led : Update decision_id\n{explanation: ..., citations: [...],\nrequired_actions: [...]}
+    return updated decision_id
+
+    L5_screen --> L6 : (async notification)
+  deactivate L5_screen
+
+  ACTOR -> L6 : lookup_decision_details()\n{decision_id}
+  L6 -> L3_led : fetch explanation/citations
+  return full report
+  L6 --> ACTOR : Return Full Compliance Report\n(including citations and reasoning)
+end group
+
+@enduml

@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ObligationAtom",
+  "type": "object",
+  "properties": {
+    "obligation_id": { "type": "string" },
+    "parent_doc_id": { "type": "string" },
+    "section": { "type": "string" },
+    "clause": { "type": "string" },
+    "text_content": { "type": "string" },
+    "temporal_validity": {
+      "type": "object",
+      "properties": {
+        "effective_date": { "type": "string", "format": "date" },
+        "expiry_date": { "type": "string", "format": "date" }
+      },
+      "required": ["effective_date", "expiry_date"]
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "payment_rails": { "type": "array", "items": { "type": "string" } },
+        "currency_codes": { "type": "array", "items": { "type": "string", "maxLength": 3 } },
+        "thematic_category": { "type": "string" }
+      },
+      "required": ["payment_rails"]
+    }
+  ,
+  "required": ["obligation_id", "parent_doc_id", "text_content", "temporal_validity", "metadata"]
+}

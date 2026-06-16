@@ -1,0 +1,34 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_DB: langfuse
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d langfuse"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - regtech_db_data:/var/lib/postgresql/data
+
+  langfuse:
+    image: langfuse/langfuse:2
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://postgres:password@db:5432/langfuse
+      NEXTAUTH_SECRET: "mysecret"
+      SALT: "mysalt"
+      NEXTAUTH_URL: "http://localhost:3000"
+      # Replace these with your actual keys from the UI
+      LANGFUSE_PUBLIC_KEY: "pk-lf-...."
+      LANGFUSE_SECRET_KEY: "sk-lf-...."
+    ports:
+      - "3000:3000"
+
+volumes:
+  regtech_db_data:

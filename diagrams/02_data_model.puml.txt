@@ -1,0 +1,203 @@
+@startuml 02_data_model
+title Layer 1 - Data Model (Taxonomy + Obligation Atom + Bi-Temporal)
+
+' =================================================================================
+' The contract every other layer agrees on. Three concepts:
+' (a) Taxonomy axis = how docs are tagged (8 verticals x 7 layers x pack)
+' (b) Obligation atom = the smallest unit a compliance officer reasons over
+' (c) Bi-temporal model = valid_time x knowledge_time, for as-of-date replay
+' =================================================================================
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #4A6FA5
+    HeaderBackgroundColor #E8F0FE
+}
+
+' =================================================================================
+' (a) Taxonomy classification (per pack)
+' =================================================================================
+
+class TaxonomyTag <<schema>> {
+    + pack_id         : string  (IN | EU | US | INTL)
+    + vertical        : enum    (V1..V8)
+    + cross_layer     : enum    (Primary | Delegated | Guidance |
+                                 Enforcement | Standards |
+                                 Industry | Case-law)
+    + jurisdiction    : string  (country code)
+    + framework       : string  (Basel III, MiFID II, RBI MD-KYC, ...)
+    --
+    // Every chunk, obligation, and document
+    // carries a TaxonomyTag. This is the
+    // tagging contract for retrieval filters.
+}
+
+note right of TaxonomyTag
+  **The 8 verticals (V1..V8):**
+  V1 Prudential / Capital / Risk
+  V2 Conduct / Markets / Investor Protection
+  V3 Financial Crime (AML/CFT/Sanctions)
+  V4 Data / Privacy / Cyber / Tech Risk
+  V5 Reporting / Disclosure
+  V6 Cross-border / FX / Trade
+  V7 Sectoral (derivatives, payments, NBFC ...)
+  V8 Governance / Conduct of the firm
+end note
+
+' =================================================================================
+' (b) Document, Clause, Chunk
+' =================================================================================
+
+class Document <<schema>> {
+    + doc_id                : uuid
+    + pack_id               : string
+    + framework             : string
+    + title                 : string
+    + issued_date           : date
+    + gazette_date          : date
+    + effective_date        : date
+    + transition_end_date   : date
+    + sunset_date           : date (nullable)
+    + supersedes_doc_id     : uuid (nullable)
+    + tags                  : TaxonomyTag[]
+    --
+    // Captures the **5 dates of a regulation**.
+    // Different from valid_time below - these
+    // are stated dates ON the document.
+}
+
+class Clause <<schema>> {
+    + clause_id       : uuid
+    + doc_id          : uuid
+    + path            : string  ("Chapter 3 / Para 3.7 / sub (a)")
+    + text            : text
+    + parent_clause_id: uuid    (nullable)
+    + obligation_lang : enum    (shall | must | may | may-not | ...)
+}
+
+class Chunk <<schema>> {
+    + chunk_id        : uuid
+    + clause_id       : uuid
+    + parent_text     : text    (surrounding context)
+    + clause_text     : text    (the clause itself)
+    + obligation_id   : uuid    (nullable - chunk = obligation)
+    + embedding       : vector(1536)
+    + tags            : TaxonomyTag[]
+}
+
+note right of Chunk
+  **Hybrid chunking strategy:**
+  - one chunk per clause (text)
+  - + parent context window
+  - + obligation-as-its-own-chunk
+  All three chunk types share the same
+  schema, distinguished by which fields
+  are populated.
+end note
+
+Document "1" *-down- "n" Clause     : contains
+Clause   "1" *-down- "n" Chunk      : indexed as
+Document "1" *-right- "n" TaxonomyTag : tagged with
+Chunk    "1" *-right- "n" TaxonomyTag : tagged with
+
+' =================================================================================
+' (c) The obligation atom - the unit of reasoning
+' =================================================================================
+
+class Obligation <<schema>> {
+    + obligation_id       : uuid
+    + pack_id             : string
+    + who                 : enum    (bank | NBFC | retail-customer | ...)
+    + what                : enum    (report | not-do | verify | hold-capital | ...)
+    + when_trigger        : json    ({ txn_type, threshold, jurisdiction })
+    + conditions          : json[]
+    + exceptions          : json[]
+    + source_clause_id    : uuid
+    + derived_from_standard: string  (Basel III | FATF Rec 10 | ...)
+    + jurisdiction        : string
+    + framework           : string
+    + valid_from          : timestamptz
+    + valid_to            : timestamptz (nullable = currently in force)
+    + knowledge_from      : timestamptz
+    + knowledge_to        : timestamptz (nullable)
+    + tags                : TaxonomyTag[]
+}
+
+Obligation "n" -up- "1" Clause : derived from
+Obligation "n" -right- "0..1" Obligation : related_to
+Obligation "n" -left- "1" TaxonomyTag : classified by
+
+note bottom of Obligation
+  **Why obligation, not clause?**
+  Compliance officers reason at the level
+  of "do I have to do X when Y happens?"
+  not "what does para 3.7 say?".
+  Obligations are the JOIN target between
+  txn payloads and regulatory text.
+end note
+
+' =================================================================================
+' Bi-temporal versioning
+' =================================================================================
+
+class VersionedRecord <<mixin>> {
+    + valid_from      : timestamptz
+    + valid_to        : timestamptz (nullable)
+    + knowledge_from  : timestamptz
+    + knowledge_to    : timestamptz (nullable)
+    + supersedes_id   : uuid        (nullable)
+    --
+    // Applied to: Document, Clause, Obligation
+}
+
+note bottom of VersionedRecord
+  **valid_time** = when the rule was/is in force in the real world
+  **knowledge_time** = when our SYSTEM knew about that fact
+
+  Audit query in 2025 for a Jan-2023 txn:
+    WHERE valid_from <= '2023-01-15'
+      AND (valid_to IS NULL OR valid_to > '2023-01-15')
+      AND knowledge_from <= '2023-01-15'  (forensic - what did we know AT decision time?)
+
+  This makes **point-in-time replay** correct:
+  the auditor sees the law as it was, AND as
+  we knew it, at the moment of decision.
+end note
+
+VersionedRecord <|.. Document
+VersionedRecord <|.. Clause
+VersionedRecord <|.. Obligation
+
+' =================================================================================
+' Cross-pack relationships (the reference graph)
+' =================================================================================
+
+class CrossLink <<schema>> {
+    + link_id     : uuid
+    + from_id     : uuid    (clause | obligation | document)
+    + to_id       : uuid
+    + edge_type   : enum    (amends | supersedes | clarifies | references |
+                             implements_standard | cross_jurisdiction_adopts)
+    + confidence  : float   (0.0-1.0; <1.0 = needs human curation)
+}
+
+CrossLink "n" -- "2" Clause : connects
+
+note right of CrossLink
+  **5 reference types we resolve:**
+  1. Intra-document         ("as defined in para 2.1")
+  2. Inter-document         (RBI cir cites RBI MD)
+  3. Cross-regulator        (RBI cites SEBI)
+  4. Cross-jurisdiction     (IN MD cites BCBS standard)
+  5. To external standards  (cites FATF Rec)
+
+  Some are auto-extractable (EU has ELI URIs),
+  most need confidence-scored ML extraction
+  with human curation for low-confidence.
+end note
+
+@enduml

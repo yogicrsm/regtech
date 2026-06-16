@@ -1,0 +1,98 @@
+@startuml 04_agent_topology
+title Reg-Assistant - Agent Topology (Layers 4 & 5)
+
+' =================================================================================
+' Layer 5 (Agents) defines the INTENT.
+' Layer 4 (deterministic Tools) executes the specific, audited data FETCH.
+' The database is NEVER queried directly by an LLM without going through a tool
+' in Layer 4 (the MPC contract).
+' =================================================================================
+
+skinparam backgroundColor #FAFAFA
+skinparam shadowing false
+skinparam defaultFontName "Helvetica"
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #555555
+    FontColor #222222
+}
+skinparam component {
+    BackgroundColor #F2F6FB
+    BorderColor #4A6FA5
+}
+
+' ---------------------------------------------------------------------------------
+' Layer 5 - Agentic Orchestration
+' ---------------------------------------------------------------------------------
+rectangle "**Layer 5 - Agentic Orchestration (LLM)**" as L5 #FFF4E6 {
+    component "Supervisor / Planner\n(intent resolve & multi-hop routing)" as L5_sup
+
+    rectangle "Regulatory Specialist Agents" as L5_specialists {
+        component "Screening Specialist\n(for Txn-Screening)" as L5_screen
+        component "QA Specialist\n(for general NLQ)" as L5_qa
+        component "Impact Specialist\n(for Reg-Change)" as L5_impact
+        component "Report Specialist" as L5_report
+    }
+
+    component "Citation-Faithfulness Verifier\n(self-correction / guardrail)" as L5_verify
+}
+
+' ---------------------------------------------------------------------------------
+' Layer 4 - Reasoning & Retrieval Tools (MPC-style contract)
+' ---------------------------------------------------------------------------------
+rectangle "**Layer 4 - Retreival & Reasoning Tools (Deterministic)**" as L4 #EAF6EA {
+    component "jurisdiction_resolve()\n(determines active pack set)" as L4_jr
+
+    package "Lookup Tools" as T_lookup {
+        component "search_regulations\n(hybrid semantic + keyword)" as L4_search
+        component "lookup_obligation\n(by ID)" as L4_obl
+        component "resolve_citation\n(cross-doc ref link)" as L4_cite
+    }
+
+    package "KG Traversal Tools" as T_kg {
+        component "traverse_kg\n(find related/amends/supersedes)" as L4_kg
+    }
+
+    package "Screening Tools" as T_screen {
+        component "classify_transaction\n(intent clx, high-risk flag)" as L4_clx
+        component "check_threshold\n(amount vs. regulation)" as L4_thresh
+        component "screen_entity\n(against sanctions list)" as L4_entity
+    }
+
+    component "log_decision()\n(append to decision ledger)" as L4_log
+}
+
+' ---------------------------------------------------------------------------------
+' Connections / Dependencies
+' ---------------------------------------------------------------------------------
+L5_sup --> L5_specialists : "orchestrates"
+L5_specialists --> L5_verify : "self-checks output"
+
+L5_sup --> L4_jr : "always called first"
+L5_qa --> T_lookup
+L5_qa --> T_kg
+L5_screen --> T_screen
+L5_screen --> T_lookup : "looks up specific rule"
+L5_impact --> T_lookup
+L5_impact --> T_kg
+
+' ---------------------------------------------------------------------------------
+' How they execute (Layer contract)
+' ---------------------------------------------------------------------------------
+note right of L5
+  Agent reasoning happens on the "Co-pilot"
+  asynchronous path, except for Txn Screening
+  which uses a simplified synchronous agent.
+end note
+
+note bottom of L4
+  **Why Tools matter (MPC):**
+  L5 (LLM) *never* has raw SQL access to L3.
+  It *only* calls these tools with structured
+  parameters. Every call to a tool in L4 is:
+  1. Determined by jurisdiction_resolve().
+  2. Logged on the decision ledger.
+  3. Auditable (deterministic input/output).
+end note
+
+@enduml
