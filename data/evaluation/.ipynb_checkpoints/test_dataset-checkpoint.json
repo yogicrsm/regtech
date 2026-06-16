@@ -1,0 +1,142 @@
+[
+  {
+    "id": "Q01",
+    "query": "What is the minimum Common Equity Tier 1 (CET1) capital ratio required under Basel III?",
+    "ground_truth": "Under Basel III, banks must maintain a minimum Common Equity Tier 1 (CET1) capital ratio of 4.5% of risk-weighted assets. Including the capital conservation buffer of 2.5%, the effective minimum CET1 requirement rises to 7%.",
+    "jurisdiction": "INTL",
+    "regulation": "Basel III"
+  },
+  {
+    "id": "Q02",
+    "query": "What is the Liquidity Coverage Ratio (LCR) requirement under Basel III?",
+    "ground_truth": "Basel III requires banks to hold high-quality liquid assets (HQLA) sufficient to cover 100% of net cash outflows over a 30-day stress period. This is measured by the Liquidity Coverage Ratio (LCR), which must be at least 100%.",
+    "jurisdiction": "INTL",
+    "regulation": "Basel III"
+  },
+  {
+    "id": "Q03",
+    "query": "What is the Net Stable Funding Ratio (NSFR) and its required minimum under Basel III?",
+    "ground_truth": "The Net Stable Funding Ratio (NSFR) under Basel III requires banks to maintain a stable funding profile over a one-year horizon. The minimum required NSFR is 100%, meaning available stable funding must equal or exceed required stable funding.",
+    "jurisdiction": "INTL",
+    "regulation": "Basel III"
+  },
+  {
+    "id": "Q04",
+    "query": "What is the large exposure limit for a bank's exposure to a single counterparty under Basel III?",
+    "ground_truth": "Under the Basel III large exposures framework, a bank's exposure to a single counterparty or group of connected counterparties must not exceed 25% of its Tier 1 capital. For exposures between global systemically important banks (G-SIBs), the limit is reduced to 15% of Tier 1 capital.",
+    "jurisdiction": "INTL",
+    "regulation": "Basel III"
+  },
+  {
+    "id": "Q05",
+    "query": "What is the capital conservation buffer under Basel III and what are the consequences of breaching it?",
+    "ground_truth": "Basel III introduces a capital conservation buffer of 2.5% of risk-weighted assets, composed of Common Equity Tier 1. Banks that fall within the buffer zone face restrictions on dividend distributions, share buybacks, and discretionary bonus payments, with the severity of restrictions increasing as the buffer falls.",
+    "jurisdiction": "INTL",
+    "regulation": "Basel III"
+  },
+  {
+    "id": "Q06",
+    "query": "What appropriateness assessment is required before selling complex financial products to retail clients under MiFID II?",
+    "ground_truth": "Under MiFID II, investment firms must conduct an appropriateness assessment before providing non-advised services for complex financial instruments to retail clients. The firm must obtain information about the client's knowledge and experience in the investment field and assess whether the product is appropriate. If the product is not appropriate, the firm must warn the client.",
+    "jurisdiction": "EU",
+    "regulation": "MiFID II"
+  },
+  {
+    "id": "Q07",
+    "query": "What are the best execution obligations for investment firms under MiFID II?",
+    "ground_truth": "MiFID II requires investment firms to take all sufficient steps to obtain the best possible result for clients when executing orders. Firms must consider price, costs, speed, likelihood of execution and settlement, size, nature, or any other consideration relevant to order execution. Firms must establish and maintain a best execution policy.",
+    "jurisdiction": "EU",
+    "regulation": "MiFID II"
+  },
+  {
+    "id": "Q08",
+    "query": "What transaction reporting obligations does MiFID II impose on investment firms?",
+    "ground_truth": "Under MiFID II Article 26, investment firms must report complete and accurate details of transactions to the competent authority as quickly as possible and no later than the close of the following working day. Reports must include details of the instrument traded, quantity, price, date and time, and counterparty identifiers.",
+    "jurisdiction": "EU",
+    "regulation": "MiFID II"
+  },
+  {
+    "id": "Q09",
+    "query": "How does MiFID II classify retail clients versus professional clients?",
+    "ground_truth": "MiFID II categorises clients into retail clients, professional clients, and eligible counterparties. Professional clients are entities with the expertise, experience, and knowledge to make their own investment decisions, including credit institutions, investment firms, insurance companies, and large undertakings. Retail clients receive the highest level of investor protection. Clients may request reclassification subject to meeting quantitative and qualitative criteria.",
+    "jurisdiction": "EU",
+    "regulation": "MiFID II"
+  },
+  {
+    "id": "Q10",
+    "query": "What product governance obligations do manufacturers have under MiFID II?",
+    "ground_truth": "Under MiFID II product governance rules, manufacturers must define a target market for each financial instrument, ensure the product meets the needs of the identified target market, and review products regularly. They must provide distributors with all information necessary to understand the product and its target market.",
+    "jurisdiction": "EU",
+    "regulation": "MiFID II"
+  },
+  {
+    "id": "Q11",
+    "query": "What are the KYC obligations for reporting entities under the RBI KYC Master Directions?",
+    "ground_truth": "Under RBI KYC Master Directions, regulated entities must establish the identity and residential address of customers at account opening, conduct ongoing due diligence, and update KYC records periodically. For high-risk customers, KYC must be updated every 2 years; for medium-risk, every 8 years; and for low-risk, every 10 years. Customer Due Diligence (CDD) and Enhanced Due Diligence (EDD) apply based on risk classification.",
+    "jurisdiction": "IN",
+    "regulation": "RBI KYC"
+  },
+  {
+    "id": "Q12",
+    "query": "What cross-border remittance limits apply to individuals under RBI guidelines?",
+    "ground_truth": "Under the RBI Liberalised Remittance Scheme (LRS), resident individuals may remit up to USD 250,000 per financial year for permitted current and capital account transactions. Remittances exceeding this limit require prior RBI approval. Transactions to countries identified as high-risk by FATF require enhanced due diligence.",
+    "jurisdiction": "IN",
+    "regulation": "RBI"
+  },
+  {
+    "id": "Q13",
+    "query": "Which countries are classified as high-risk jurisdictions requiring enhanced due diligence under RBI guidelines?",
+    "ground_truth": "RBI guidelines require Enhanced Due Diligence (EDD) for transactions involving countries on the FATF blacklist (currently Iran, North Korea) and grey list (countries under increased monitoring). Additionally, RBI periodically issues advisories on jurisdictions subject to sanctions. Banks must refuse or report transactions with sanctioned jurisdictions.",
+    "jurisdiction": "IN",
+    "regulation": "RBI"
+  },
+  {
+    "id": "Q14",
+    "query": "What are the priority sector lending requirements for banks under RBI guidelines?",
+    "ground_truth": "Under RBI Priority Sector Lending (PSL) guidelines, domestic commercial banks and foreign banks with 20 or more branches must achieve a PSL target of 40% of Adjusted Net Bank Credit (ANBC). Sub-targets include agriculture (18%), micro enterprises (7.5%), and weaker sections (12%). Shortfalls must be deposited in RBI-specified funds.",
+    "jurisdiction": "IN",
+    "regulation": "RBI PSL"
+  },
+  {
+    "id": "Q15",
+    "query": "What are the regulatory capital requirements for Non-Banking Financial Companies (NBFCs) under RBI?",
+    "ground_truth": "Under RBI regulations, Non-Deposit taking Systemically Important NBFCs (NBFC-ND-SI) must maintain a minimum Capital to Risk-weighted Assets Ratio (CRAR) of 15%, with Tier I capital of at least 10%. Deposit-taking NBFCs must maintain a CRAR of 15%. NBFCs are also required to maintain a liquidity buffer as per the recently introduced Liquidity Risk Management Framework.",
+    "jurisdiction": "IN",
+    "regulation": "RBI NBFC"
+  },
+  {
+    "id": "Q16",
+    "query": "A cross-border payment of $2M is made to a non-KYC verified entity in Iran. Which regulations apply?",
+    "ground_truth": "This transaction triggers multiple regulatory obligations: (1) RBI KYC Master Directions require EDD for non-KYC entities and prohibit transactions with FATF-blacklisted jurisdictions such as Iran; (2) Basel III large exposure rules may apply depending on counterparty concentration; (3) UN Security Council and RBI sanctions on Iran make this transaction likely prohibited and reportable to the FIU within 24 hours. The transaction should be blocked pending compliance review.",
+    "jurisdiction": "IN",
+    "regulation": "RBI KYC, Basel III, Sanctions"
+  },
+  {
+    "id": "Q17",
+    "query": "A retail customer purchases a structured derivative product without an appropriateness assessment. Which MiFID II and Basel III obligations are triggered?",
+    "ground_truth": "Under MiFID II, the investment firm has breached its appropriateness assessment obligation under Article 25(3). The firm must warn the client or refuse the transaction. Under Basel III, complex derivatives carry higher risk-weights and counterparty credit risk capital requirements. The firm must also ensure proper product governance documentation under MiFID II product governance rules.",
+    "jurisdiction": "EU",
+    "regulation": "MiFID II, Basel III"
+  },
+  {
+    "id": "Q18",
+    "query": "An intra-group derivative trade exceeds the large exposure threshold. What are the regulatory consequences under Basel III?",
+    "ground_truth": "Under Basel III large exposures rules, a bank's exposure to a single counterparty (including intra-group) must not exceed 25% of Tier 1 capital (15% for G-SIB to G-SIB). Breaching this threshold requires immediate notification to the regulator, a remediation plan, and potential capital surcharge. Intra-group exemptions may apply subject to regulatory approval and demonstration of effective risk transfer.",
+    "jurisdiction": "INTL",
+    "regulation": "Basel III"
+  },
+  {
+    "id": "Q19",
+    "query": "What reporting obligations does a bank have when it identifies a suspicious transaction under RBI and global AML frameworks?",
+    "ground_truth": "Under RBI's Prevention of Money Laundering Act (PMLA) obligations and KYC Master Directions, banks must file a Suspicious Transaction Report (STR) with the Financial Intelligence Unit - India (FIU-IND) within 7 days of forming reasonable grounds for suspicion. No tipping-off of the customer is permitted. Internationally, FATF Recommendation 20 requires immediate STR filing. Records must be retained for 5 years.",
+    "jurisdiction": "IN",
+    "regulation": "RBI AML, FATF"
+  },
+  {
+    "id": "Q20",
+    "query": "What are the data retention requirements for transaction records under MiFID II and RBI guidelines?",
+    "ground_truth": "Under MiFID II Article 25(6), investment firms must retain records of all transactions for a minimum of 5 years, including order and transaction details, client communications, and rationale for investment decisions. Under RBI KYC Master Directions, banks must retain customer identification documents and account records for at least 5 years after the business relationship ends, and transaction records for 5 years from the date of the transaction.",
+    "jurisdiction": "EU/IN",
+    "regulation": "MiFID II, RBI KYC"
+  }
+]

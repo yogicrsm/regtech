@@ -1,25 +1,30 @@
 import psycopg
 import ollama
 from datetime import datetime
+from tools.reranker import rerank
 
 # Database and Model configs
 DB_CONN_STRING = "host=127.0.0.1 port=5434 dbname=regtech user=postgres password=mysecretpassword"
 EMBEDDING_MODEL = "nomic-embed-text"
 
 def search_regulations(
-    semantic_query: str, 
-    transaction_date: str = None, 
-    keyword: str = None, 
+    semantic_query: str,
+    transaction_date: str = None,
+    keyword: str = None,
     top_k: int = 3
 ) -> list:
     """
-    Performs a Hybrid Bitemporal Search against the regulatory database.
+    Hybrid Bitemporal Search with RRF re-ranking.
+
+    Retrieves top_k*3 candidates via cosine similarity + optional keyword filter,
+    then re-ranks using Reciprocal Rank Fusion over vector rank and keyword density.
     """
-    # 1. Default to today if no transaction date is provided
     if not transaction_date:
         transaction_date = datetime.now().strftime("%Y-%m-%d")
 
-    # 2. Convert the natural language query into a vector using local Ollama
+    # Fetch extra candidates so the re-ranker has material to work with
+    fetch_k = top_k * 3
+
     try:
         response = ollama.embeddings(model=EMBEDDING_MODEL, prompt=semantic_query)
         query_vector = response['embedding']
@@ -27,49 +32,45 @@ def search_regulations(
         print(f"❌ Failed to embed query: {e}")
         return []
 
-    # 3. Execute the Hybrid SQL Search
     try:
         with psycopg.connect(DB_CONN_STRING) as conn:
             with conn.cursor() as cursor:
-                
-                # The SQL combines Vector Math (<=>), Date Intersection (@>), and Keyword matching (ILIKE)
+
                 sql_query = """
-                    SELECT 
-                        jurisdiction, 
-                        doc_id, 
-                        citation, 
+                    SELECT
+                        jurisdiction,
+                        doc_id,
+                        citation,
                         raw_text,
                         1 - (embedding <=> %s::vector) AS similarity_score
                     FROM regulation_chunks
                     WHERE validity_period @> %s::timestamptz
                 """
-                
+
                 params = [query_vector, transaction_date]
 
-                # Add Keyword filter if provided
                 if keyword:
                     sql_query += " AND raw_text ILIKE %s "
                     params.append(f"%{keyword}%")
 
-                # Order by closest semantic match
                 sql_query += " ORDER BY embedding <=> %s::vector LIMIT %s;"
-                params.extend([query_vector, top_k])
+                params.extend([query_vector, fetch_k])
 
                 cursor.execute(sql_query, tuple(params))
-                results = cursor.fetchall()
+                rows = cursor.fetchall()
 
-                # Format the results cleanly
-                formatted_results = []
-                for row in results:
-                    formatted_results.append({
+                candidates = []
+                for row in rows:
+                    candidates.append({
                         "jurisdiction": row[0],
                         "document": row[1],
                         "citation": row[2],
                         "text": row[3],
                         "relevance_score": round(row[4], 4)
                     })
-                
-                return formatted_results
+
+                # Re-rank with RRF and return the requested top_k
+                return rerank(semantic_query, candidates, top_k)
 
     except Exception as e:
         print(f"❌ Search execution failed: {e}")
