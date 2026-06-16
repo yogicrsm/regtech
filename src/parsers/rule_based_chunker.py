@@ -90,6 +90,7 @@ if __name__ == "__main__":
         {"path": f"{base_dir}/packs/in/source/rbi_kyc_master.pdf", "jur": "IN", "id": "rbi_kyc_2016"},
         {"path": f"{base_dir}/packs/intl/basel_iii/source/basel_iii_framework.pdf", "jur": "INTL", "id": "basel_iii_framework"},
         {"path": f"{base_dir}/packs/eu/source/mifid_ii_guide.pdf", "jur": "EU", "id": "mifid_ii_guide"},
+        {"path": f"{base_dir}/packs/eu/source/esma_mifid_investor_protection.pdf", "jur": "EU", "id": "esma_mifid_investor"},
         {"path": f"{base_dir}/packs/in/source/rbi_op_guidelines_primary_dealers.pdf", "jur": "IN", "id": "rbi_op_guidelines"},
         {"path": f"{base_dir}/packs/in/source/rbi_ReliefSavingsBonds.pdf", "jur": "IN", "id": "rbi_relief_bonds"}
     ]

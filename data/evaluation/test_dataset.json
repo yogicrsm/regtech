@@ -78,31 +78,31 @@
   },
   {
     "id": "Q12",
-    "query": "What cross-border remittance limits apply to individuals under RBI guidelines?",
-    "ground_truth": "Under the RBI Liberalised Remittance Scheme (LRS), resident individuals may remit up to USD 250,000 per financial year for permitted current and capital account transactions. Remittances exceeding this limit require prior RBI approval. Transactions to countries identified as high-risk by FATF require enhanced due diligence.",
+    "query": "What Enhanced Due Diligence (EDD) requirements apply under RBI KYC Master Direction for high-risk and high-value accounts?",
+    "ground_truth": "Under RBI KYC Master Directions, Enhanced Due Diligence is required for high-risk customers including Politically Exposed Persons (PEPs), non-face-to-face customers, and accounts from high-risk jurisdictions. EDD involves obtaining additional information on the customer, understanding the source of funds and wealth, conducting more frequent ongoing monitoring, and updating KYC records every 2 years for high-risk accounts.",
     "jurisdiction": "IN",
-    "regulation": "RBI"
+    "regulation": "RBI KYC"
   },
   {
     "id": "Q13",
-    "query": "Which countries are classified as high-risk jurisdictions requiring enhanced due diligence under RBI guidelines?",
-    "ground_truth": "RBI guidelines require Enhanced Due Diligence (EDD) for transactions involving countries on the FATF blacklist (currently Iran, North Korea) and grey list (countries under increased monitoring). Additionally, RBI periodically issues advisories on jurisdictions subject to sanctions. Banks must refuse or report transactions with sanctioned jurisdictions.",
+    "query": "What are the beneficial ownership disclosure thresholds for legal entities under RBI KYC directions?",
+    "ground_truth": "Under RBI KYC Master Directions, reporting entities must identify and verify the beneficial owner of a legal entity customer. A beneficial owner is a natural person who ultimately owns or controls the entity, typically defined as holding 25% or more of shares or voting rights in a company, or 15% for partnerships and trusts. Where no natural person meets the threshold, the senior managing official is treated as the beneficial owner.",
     "jurisdiction": "IN",
-    "regulation": "RBI"
+    "regulation": "RBI KYC"
   },
   {
     "id": "Q14",
-    "query": "What are the priority sector lending requirements for banks under RBI guidelines?",
-    "ground_truth": "Under RBI Priority Sector Lending (PSL) guidelines, domestic commercial banks and foreign banks with 20 or more branches must achieve a PSL target of 40% of Adjusted Net Bank Credit (ANBC). Sub-targets include agriculture (18%), micro enterprises (7.5%), and weaker sections (12%). Shortfalls must be deposited in RBI-specified funds.",
+    "query": "What are the Net Owned Fund and capital adequacy requirements for Primary Dealers under RBI operating guidelines?",
+    "ground_truth": "Under RBI Operating Guidelines for Primary Dealers, standalone Primary Dealers must maintain a minimum Net Owned Fund (NOF) as stipulated by RBI. Primary Dealers are required to maintain adequate capital commensurate with the risks they undertake, including market risk, credit risk, and operational risk. They must adhere to capital adequacy norms and maintain prescribed leverage ratios.",
     "jurisdiction": "IN",
-    "regulation": "RBI PSL"
+    "regulation": "RBI Primary Dealers"
   },
   {
     "id": "Q15",
-    "query": "What are the regulatory capital requirements for Non-Banking Financial Companies (NBFCs) under RBI?",
-    "ground_truth": "Under RBI regulations, Non-Deposit taking Systemically Important NBFCs (NBFC-ND-SI) must maintain a minimum Capital to Risk-weighted Assets Ratio (CRAR) of 15%, with Tier I capital of at least 10%. Deposit-taking NBFCs must maintain a CRAR of 15%. NBFCs are also required to maintain a liquidity buffer as per the recently introduced Liquidity Risk Management Framework.",
+    "query": "Who is eligible to invest in RBI Relief Savings Bonds and what are the applicable investment limits?",
+    "ground_truth": "RBI Relief Savings Bonds are open to investment by resident individuals, Hindu Undivided Families (HUFs), and specified institutions. The bonds have a fixed tenure and interest rate. There is no upper limit on investment for individual investors. Non-Resident Indians (NRIs) are not eligible to invest. The bonds are non-tradeable and cannot be used as collateral for loans.",
     "jurisdiction": "IN",
-    "regulation": "RBI NBFC"
+    "regulation": "RBI Relief Savings Bonds"
   },
   {
     "id": "Q16",

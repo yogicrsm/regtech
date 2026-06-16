@@ -1,0 +1,22 @@
+{
+  "pack_id": "pack-eu-mifid-v1",
+  "jurisdiction": "EU",
+  "version": "1.0.0",
+  "last_updated": "2026-06-16",
+  "documents": [
+    {
+      "doc_id": "mifid_ii_guide",
+      "title": "MiFID II Investor Protection Guide",
+      "type": "Regulatory Guide",
+      "payment_rails_affected": ["Investment Services", "Trading"],
+      "initial_effective_date": "2018-01-03"
+    },
+    {
+      "doc_id": "esma_mifid_investor",
+      "title": "ESMA MiFID II Investor Protection Guidelines",
+      "type": "ESMA Guidelines",
+      "payment_rails_affected": ["Investment Services", "Retail Distribution"],
+      "initial_effective_date": "2017-06-02"
+    }
+  ]
+}

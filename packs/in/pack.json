@@ -1,15 +1,29 @@
 {
   "pack_id": "pack-in-rbi-v1",
   "jurisdiction": "IN",
-  "version": "1.0.0",
-  "last_updated": "2026-06-15",
+  "version": "1.1.0",
+  "last_updated": "2026-06-16",
   "documents": [
     {
-      "doc_id": "doc-rbi-kyc-2016",
+      "doc_id": "rbi_kyc_2016",
       "title": "Master Direction - Know Your Customer (KYC) Direction, 2016",
       "type": "Master Direction",
       "payment_rails_affected": ["Universal"],
       "initial_effective_date": "2016-02-25"
+    },
+    {
+      "doc_id": "rbi_op_guidelines",
+      "title": "Operating Guidelines for Primary Dealers",
+      "type": "Operating Guidelines",
+      "payment_rails_affected": ["Government Securities"],
+      "initial_effective_date": "2008-01-01"
+    },
+    {
+      "doc_id": "rbi_relief_bonds",
+      "title": "RBI Relief Savings Bonds - Terms and Conditions",
+      "type": "Product Guidelines",
+      "payment_rails_affected": ["Retail Savings"],
+      "initial_effective_date": "2003-04-01"
     }
   ]
 }

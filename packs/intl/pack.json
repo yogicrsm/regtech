@@ -1,0 +1,15 @@
+{
+  "pack_id": "pack-intl-basel-v1",
+  "jurisdiction": "INTL",
+  "version": "1.0.0",
+  "last_updated": "2026-06-16",
+  "documents": [
+    {
+      "doc_id": "basel_iii_framework",
+      "title": "Basel III: A Global Regulatory Framework for More Resilient Banks and Banking Systems",
+      "type": "BCBS Framework",
+      "payment_rails_affected": ["Capital Adequacy", "Liquidity"],
+      "initial_effective_date": "2013-01-01"
+    }
+  ]
+}
